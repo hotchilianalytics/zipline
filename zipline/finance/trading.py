@@ -33,8 +33,7 @@ class SimulationParameters(object):
                  capital_base=DEFAULT_CAPITAL_BASE,
                  emission_rate='daily',
                  data_frequency='daily',
-                 arena='backtest',
-                 execution_id=None):
+                 arena='backtest'):
 
         assert type(start_session) == pd.Timestamp
         assert type(end_session) == pd.Timestamp
@@ -54,8 +53,6 @@ class SimulationParameters(object):
         self._start_session = normalize_date(start_session)
         self._end_session = normalize_date(end_session)
         self._capital_base = capital_base
-        if execution_id:
-            self._execution_id = execution_id
 
         self._emission_rate = emission_rate
         self._data_frequency = data_frequency

@@ -362,7 +362,7 @@ class Ledger(object):
         The daily returns as an ndarray. Days that have not yet finished will
         hold a value of ``np.nan``.
     """
-    def __init__(self, trading_sessions, capital_base, data_frequency):
+    def __init__(self, trading_sessions, capital_base, data_frequency, cash):
         if len(trading_sessions):
             start = trading_sessions[0]
         else:
@@ -371,7 +371,7 @@ class Ledger(object):
         # Have some fields of the portfolio changed? This should be accessed
         # through ``self._dirty_portfolio``
         self.__dirty_portfolio = False
-        self._immutable_portfolio = zp.Portfolio(start, capital_base)
+        self._immutable_portfolio = zp.Portfolio(start, capital_base, cash = cash)
         self._portfolio = zp.MutableView(self._immutable_portfolio)
 
         self.daily_returns_series = pd.Series(

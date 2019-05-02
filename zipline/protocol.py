@@ -172,14 +172,14 @@ class Portfolio(object):
         cash, current cash, and portfolio value.
     """
 
-    def __init__(self, start_date=None, capital_base=0.0):
+    def __init__(self, start_date=None, capital_base=0.0, cash=None):
         self_ = MutableView(self)
         self_.cash_flow = 0.0
         self_.starting_cash = capital_base
         self_.portfolio_value = capital_base
         self_.pnl = 0.0
         self_.returns = 0.0
-        self_.cash = capital_base
+        self_.cash =  capital_base if cash is None else cash
         self_.positions = Positions()
         self_.start_date = start_date
         self_.positions_value = 0.0

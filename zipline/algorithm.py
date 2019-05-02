@@ -571,6 +571,7 @@ class TradingAlgorithm(object):
             data_frequency=self.sim_params.data_frequency,
             asset_finder=self.asset_finder,
             metrics=self._metrics_set,
+            cash=None
         )
 
     def _create_generator(self, sim_params):
@@ -1208,20 +1209,22 @@ class TradingAlgorithm(object):
 
         if asset.auto_close_date:
             day = normalize_date(self.get_datetime())
-            end_date = min(asset.end_date, asset.auto_close_date)
+            ###ajjc end_date = min(asset.end_date, asset.auto_close_date)
+            end_date = asset.auto_close_date
+
             if isinstance(end_date, str):
                 from dateutil import parser
                 end_date = parser.parse(end_date).replace(tzinfo=pytz.UTC)
-            if day > end_date:
-                # If we are after the asset's end date or auto close date, warn
-                # the user that they can't place an order for this asset, and
-                # return None.
-                log.warn("Cannot place order for {0}, as it has de-listed. "
-                         "Any existing positions for this asset will be "
-                         "liquidated on "
-                         "{1}.".format(asset.symbol, asset.auto_close_date))
+            #if day > end_date:
+                ## If we are after the asset's end date or auto close date, warn
+                ## the user that they can't place an order for this asset, and
+                ## return None.
+                #log.warn("Cannot place order for {0}, as it has de-listed. "
+                         #"Any existing positions for this asset will be "
+                         #"liquidated on "
+                         #"{1}. Today is {2}.".format(asset.symbol, asset.auto_close_date, day))
 
-                return False
+                #return False
 
         return True
 

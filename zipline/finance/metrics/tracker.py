@@ -72,7 +72,8 @@ class MetricsTracker(object):
                  emission_rate,
                  data_frequency,
                  asset_finder,
-                 metrics):
+                 metrics,
+                 cash):
         self.emission_rate = emission_rate
 
         self._trading_calendar = trading_calendar
@@ -80,6 +81,7 @@ class MetricsTracker(object):
         self._last_session = last_session
         self._capital_base = capital_base
         self._asset_finder = asset_finder
+        self._cash = cash
 
         self._current_session = first_session
         self._market_open, self._market_close = self._execution_open_and_close(
@@ -94,7 +96,7 @@ class MetricsTracker(object):
         )
         self._total_session_count = len(sessions)
 
-        self._ledger = Ledger(sessions, capital_base, data_frequency)
+        self._ledger = Ledger(sessions, capital_base, data_frequency, cash)
 
         self._benchmark_source = NamedExplodingObject(
             'self._benchmark_source',

@@ -60,7 +60,10 @@ class LiveTradingAlgorithm(TradingAlgorithm):
         # trading client can never be serialized, the initialized function and
         # perf tracker remember the context variables and the past parformance
         # and need to be whitelisted
-        self._context_persistence_blacklist = ['trading_client']
+
+        # ajjc : Add hca algo class excludes Original ['trading_client']
+        self._context_persistence_blacklist = ['trading_client','strategies','exposure','order_mngr']
+
         self._context_persistence_whitelist = ['initialized', 'perf_tracker']
         self._context_persistence_excludes = []
 
@@ -137,7 +140,6 @@ class LiveTradingAlgorithm(TradingAlgorithm):
             minute_emission=minutely_emission,
             time_skew=self.broker.time_skew,
             is_broker_alive=self.broker.is_alive,
-            execution_id=self.sim_params._execution_id,
             stop_execution_callback=self._stop_execution_callback
         )
 
@@ -188,6 +190,7 @@ class LiveTradingAlgorithm(TradingAlgorithm):
         """
         account = self.broker.get_account_from_broker()
         capital_base = float(account['NetLiquidation'])
+        cash = float(account['CashBalance'])
 
         return MetricsTracker(
             trading_calendar=self.trading_calendar,
@@ -198,6 +201,7 @@ class LiveTradingAlgorithm(TradingAlgorithm):
             data_frequency=self.sim_params.data_frequency,
             asset_finder=self.asset_finder,
             metrics=self._metrics_set,
+            cash = cash
         )
 
     def updated_portfolio(self):

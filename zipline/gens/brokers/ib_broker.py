@@ -53,9 +53,9 @@ Position = namedtuple('Position', ['contract', 'position', 'market_price',
                                    'unrealized_pnl', 'realized_pnl',
                                    'account_name'])
 
-_max_wait_subscribe = 10  # how many cycles to wait
+_max_wait_subscribe = 250 #100  # how many cycles to wait
 _connection_timeout = 15  # Seconds
-_poll_frequency = 0.1
+_poll_frequency = 0.2 #0.1
 
 symbol_to_exchange = defaultdict(lambda: 'SMART')
 symbol_to_exchange['VIX'] = 'CBOE'
@@ -160,6 +160,11 @@ class TWSConnection(EClientSocket, EWrapper):
             sleep(_poll_frequency)
 
         log.info("Local-Broker Time Skew: {}".format(self.time_skew))
+        for acct_name in self.managed_accounts:
+            log.info("ib_broker: Account:{} Details:\n{}".format(acct_name, self.accounts[acct_name]))
+
+        #ajjc "delayed"
+        #self.reqMarketDataType(3)
 
     def _download_account_details(self):
         exec_filter = ExecutionFilter()
@@ -219,6 +224,9 @@ class TWSConnection(EClientSocket, EWrapper):
             self.reqRealTimeBars(ticker_id, contract, 60, 'TRADES', True)
         else:
             tick_list = "233"  # RTVolume, return tick_type == 48
+            #Snapshot does not work:
+            #self.reqMktData(ticker_id, contract, tick_list, True) #[321] Error validating request:-'bR'
+            #        : cause - Snapshot market data subscription is not applicable to generic ticks (0)
             self.reqMktData(ticker_id, contract, tick_list, False)
             sleep(11)
 
@@ -538,17 +546,28 @@ class IBBroker(Broker):
                 asset))
 
             # remove str() cast to have a fun debugging journey
+            #ajjc
+            #self._tws.reqMarketDataType(marketDataType=3) #3=Delayed
+
             self._tws.subscribe_to_market_data(str(asset.symbol))
             self._subscribed_assets.append(asset)
-            try:
-                polling.poll(
-                    lambda: asset.symbol in self._tws.bars,
-                    timeout=_max_wait_subscribe,
-                    step=_poll_frequency)
-            except polling.TimeoutException as te:
-                log.warning('!!!WARNING: I did not manage to subscribe to %s ' % str(asset.symbol))
-            else:
-                log.debug("Subscription completed")
+            for trys in range(1,6): # Try 5 times to subscribe
+                try:
+                    log.debug("{} try: Polling IB for subscription to {}".format(trys, str(asset.symbol)))
+                    polling.poll(
+                        lambda: asset.symbol in self._tws.bars,
+                        timeout=_max_wait_subscribe,
+                        step=_poll_frequency)
+                except polling.TimeoutException as te:
+                    #while not te.values.empty():
+                    #    # Print all of the values that did not meet the exception
+                    #    print te.values.get()
+                    log.debug("{} try: !!!WARNING: No verification of IB data subscription to {}".format(trys, str(asset.symbol)))
+                    continue
+
+                else:
+                    log.debug("{} try: IB Subscription completed for {}".format(trys, str(asset.symbol)))
+                    break
 
     @property
     def positions(self):
@@ -609,7 +628,7 @@ class IBBroker(Broker):
         ib_account = self._tws.accounts[self.account_id][self.currency]
         return ib_account
 
-    
+
     def set_metrics_tracker(self, metrics_tracker):
         self.metrics_tracker = metrics_tracker
 
@@ -963,10 +982,20 @@ class IBBroker(Broker):
 
     def get_spot_value(self, assets, field, dt, data_frequency):
         symbol = str(assets.symbol)
-
-        self.subscribe_to_market_data(assets)
-
-        bars = self._tws.bars[symbol]
+        for trys in range(1,6): # Try 5 times to get a subscription to symbol.
+            try:
+                print("{} try: subscribe to {}".format(trys, symbol))
+                self.subscribe_to_market_data(assets)
+                bars = self._tws.bars[symbol]
+            except KeyError:
+                print('Subscribe to Asset: KeyError: {}'.format(str(symbol)))
+                continue
+            except Exception:
+                #print(e.dir)
+                raise
+            else:
+                print("{}-try:Sucess: Subscribed to {}".format(trys, symbol))
+                break
 
         last_event_time = bars.index[-1]
 

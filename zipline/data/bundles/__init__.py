@@ -1,6 +1,7 @@
 # These imports are necessary to force module-scope register calls to happen.
 from . import quandl  # noqa
 from . import csvdir  # noqa
+from . import sharadar_sep  # noqa
 
 from .core import (
     UnknownBundle,
