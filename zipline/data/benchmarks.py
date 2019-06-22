@@ -15,6 +15,8 @@
 import pandas as pd
 import requests
 
+# EMCLOUD feed uri: From: https://indexes.nasdaqomx.com/Index/History/EMCLOUD
+#    https://indexes.nasdaqomx.com/Index/ExportHistory/EMCLOUD?startDate=2018-05-18T00:00:00.000&endDate=2019-05-18T00:00:00.000&timeOfDay=EOD
 
 def get_benchmark_returns(symbol):
     """

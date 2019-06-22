@@ -224,9 +224,12 @@ class TWSConnection(EClientSocket, EWrapper):
             self.reqRealTimeBars(ticker_id, contract, 60, 'TRADES', True)
         else:
             tick_list = "233"  # RTVolume, return tick_type == 48
-            #Snapshot does not work:
-            #self.reqMktData(ticker_id, contract, tick_list, True) #[321] Error validating request:-'bR'
+            #Snapshot does not work:2nd try: 05/07/2019 : still not working
+            #self.reqMktData(ticker_id, contract, "", True)
+
+            ###ajjc old self.reqMktData(ticker_id, contract, "", True) #[321] Error validating request:-'bR'
             #        : cause - Snapshot market data subscription is not applicable to generic ticks (0)
+            ###ajjc
             self.reqMktData(ticker_id, contract, tick_list, False)
             sleep(11)
 
@@ -549,8 +552,13 @@ class IBBroker(Broker):
             #ajjc
             #self._tws.reqMarketDataType(marketDataType=3) #3=Delayed
 
-            self._tws.subscribe_to_market_data(str(asset.symbol))
-            self._subscribed_assets.append(asset)
+            try:
+                self._tws.subscribe_to_market_data(str(asset.symbol))
+                self._subscribed_assets.append(asset)
+            except Exception as e:
+                print(e)
+                pass
+
             for trys in range(1,6): # Try 5 times to subscribe
                 try:
                     log.debug("{} try: Polling IB for subscription to {}".format(trys, str(asset.symbol)))
@@ -563,11 +571,17 @@ class IBBroker(Broker):
                     #    # Print all of the values that did not meet the exception
                     #    print te.values.get()
                     log.debug("{} try: !!!WARNING: No verification of IB data subscription to {}".format(trys, str(asset.symbol)))
+                    if trys == 6:
+                        return False
                     continue
 
                 else:
                     log.debug("{} try: IB Subscription completed for {}".format(trys, str(asset.symbol)))
+                    #self._subscribed_assets.append(asset)
+                    return True
                     break
+        else:
+            return True
 
     @property
     def positions(self):
@@ -982,30 +996,35 @@ class IBBroker(Broker):
 
     def get_spot_value(self, assets, field, dt, data_frequency):
         symbol = str(assets.symbol)
+        bars=pd.DataFrame() # Init bars as empty to handle/skip asset that has no subscription.
         for trys in range(1,6): # Try 5 times to get a subscription to symbol.
             try:
                 print("{} try: subscribe to {}".format(trys, symbol))
-                self.subscribe_to_market_data(assets)
-                bars = self._tws.bars[symbol]
+                is_subscribed = self.subscribe_to_market_data(assets)
+                if is_subscribed or None:
+                    bars = self._tws.bars[symbol]
+                else:
+                    print('No Subscription to to Asset: {} Empty bars returned.'.format(str(symbol)))
             except KeyError:
                 print('Subscribe to Asset: KeyError: {}'.format(str(symbol)))
                 continue
             except Exception:
                 #print(e.dir)
-                raise
+                #raise
+                continue # Skip/handle asset with no subscription(may be due to delisting/hale trading)
             else:
                 print("{}-try:Sucess: Subscribed to {}".format(trys, symbol))
                 break
 
-        last_event_time = bars.index[-1]
-
-        minute_start = (last_event_time - pd.Timedelta('1 min')) \
-            .time()
-        minute_end = last_event_time.time()
-
         if bars.empty:
             return pd.NaT if field == 'last_traded' else np.NaN
         else:
+            last_event_time = bars.index[-1]
+
+            minute_start = (last_event_time - pd.Timedelta('1 min')) \
+                .time()
+            minute_end = last_event_time.time()
+
             if field == 'price':
                 return bars.last_trade_price.iloc[-1]
             elif field == 'last_traded':
