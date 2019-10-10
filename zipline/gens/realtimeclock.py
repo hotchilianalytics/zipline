@@ -50,15 +50,15 @@ class RealtimeClock(object):
                  time_skew=pd.Timedelta("0s"),
                  is_broker_alive=None,
                  stop_execution_callback=None):
-                 
+
         today = pd.to_datetime('now', utc=True).date()
-        beginning_of_today = pd.to_datetime(today, utc=True)
+        beginning_of_today = pd.to_datetime(today, utc=True).tz_convert(None)
 
         self.sessions = sessions[(beginning_of_today <= sessions)]
-        self.execution_opens = execution_opens[(beginning_of_today <= execution_opens)]
-        self.execution_closes = execution_closes[(beginning_of_today <= execution_closes)]
+        self.execution_opens = execution_opens[(beginning_of_today <= execution_opens.tz_localize(None))]
+        self.execution_closes = execution_closes[(beginning_of_today <= execution_closes.tz_localize(None))]
         self.before_trading_start_minutes = before_trading_start_minutes[
-                (beginning_of_today <= before_trading_start_minutes)]
+                (beginning_of_today <= before_trading_start_minutes.tz_localize(None))]
 
         self.minute_emission = minute_emission
         self.time_skew = time_skew

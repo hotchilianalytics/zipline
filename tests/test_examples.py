@@ -17,6 +17,8 @@ import tarfile
 
 import matplotlib
 from nose_parameterized import parameterized
+from nose.tools import nottest
+
 import pandas as pd
 
 from zipline import examples

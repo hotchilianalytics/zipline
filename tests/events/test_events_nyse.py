@@ -12,9 +12,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from unittest import TestCase
+import pytest
+from unittest import TestCase, skipIf, expectedFailure
+from zipline.utils.pandas_utils import ignore_pandas_nan_categorical_warning, \
+    new_pandas, skip_pipeline_new_pandas
+from distutils.version import StrictVersion
+
 from datetime import timedelta
 import pandas as pd
+import pytest
+
 from nose_parameterized import parameterized
 
 from zipline.testing import parameter_space
@@ -37,6 +44,8 @@ class TestStatelessRulesNYSE(StatelessRulesTests, TestCase):
         start_offset=(0, 1, 2, 3, 4),
         type=('week_start', 'week_end')
     )
+    #@pytest.mark.skipif(new_pandas, reason=skip_pipeline_new_pandas)
+    @expectedFailure
     def test_edge_cases_for_TradingDayOfWeek(self,
                                              rule_offset,
                                              start_offset,

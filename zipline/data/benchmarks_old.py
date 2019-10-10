@@ -12,11 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import numpy as np
 import pandas as pd
-import pandas_datareader.data as pd_reader
+import requests
 
-def get_benchmark_returns(symbol, first_date, last_date):
+# EMCLOUD feed uri: From: https://indexes.nasdaqomx.com/Index/History/EMCLOUD
+#    https://indexes.nasdaqomx.com/Index/ExportHistory/EMCLOUD?startDate=2018-05-18T00:00:00.000&endDate=2019-05-18T00:00:00.000&timeOfDay=EOD
+
+def get_benchmark_returns(symbol):
     """
     Get a Series of benchmark returns from IEX associated with `symbol`.
     Default is `SPY`.
@@ -26,21 +28,17 @@ def get_benchmark_returns(symbol, first_date, last_date):
     symbol : str
         Benchmark symbol for which we're getting the returns.
 
-    The data is provided by Yahoo Finance
+    The data is provided by IEX (https://iextrading.com/), and we can
+    get up to 5 years worth of data.
     """
-    data = pd_reader.DataReader(
-        symbol,
-        'yahoo',
-        first_date,
-        last_date
+    r = requests.get(
+        'https://api.iextrading.com/1.0/stock/{}/chart/5y'.format(symbol)
     )
+    data = r.json()
 
-    data = data['Close']
+    df = pd.DataFrame(data)
 
-    data[pd.Timestamp('2008-12-15')] = np.nan
-    data[pd.Timestamp('2009-08-11')] = np.nan
-    data[pd.Timestamp('2012-02-02')] = np.nan
+    df.index = pd.DatetimeIndex(df['date'])
+    df = df['close']
 
-    data = data.fillna(method='ffill')
-
-    return data.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]
+    return df.sort_index().tz_localize('UTC').pct_change(1).iloc[1:]

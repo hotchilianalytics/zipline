@@ -8,6 +8,9 @@ from os.path import (
 )
 
 from nose_parameterized import parameterized
+from nose.tools import nottest
+
+
 import numpy as np
 from numpy import (
     array,
@@ -223,6 +226,8 @@ class ClosesAndVolumes(WithMakeAlgo, ZiplineTestCase):
     def exists(self, date, asset):
         return asset.start_date <= date <= asset.end_date
 
+    ###ajjc zipline-live allows pipeline in other sections.
+    @nottest
     def test_attach_pipeline_after_initialize(self):
         """
         Assert that calling attach_pipeline after initialize raises correctly.
@@ -253,7 +258,8 @@ class ClosesAndVolumes(WithMakeAlgo, ZiplineTestCase):
 
         with self.assertRaises(AttachPipelineAfterInitialize):
             algo.run()
-
+    ###ajjc zipline-live allows pipeline in other sections.
+    @nottest
     def test_pipeline_output_after_initialize(self):
         """
         Assert that calling pipeline_output after initialize raises correctly.

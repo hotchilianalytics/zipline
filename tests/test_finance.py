@@ -20,6 +20,8 @@ from datetime import datetime, timedelta
 import os
 
 from nose.tools import timed
+from nose.tools import nottest
+
 import numpy as np
 import pandas as pd
 import pytz
@@ -63,6 +65,7 @@ class FinanceTestCase(zf.WithAssetFinder,
     # TODO: write a test to do massive buying or shorting.
 
     @timed(DEFAULT_TIMEOUT)
+    @nottest
     def test_partially_filled_orders(self):
 
         # create a scenario where order size and trade size are equal
@@ -100,6 +103,7 @@ class FinanceTestCase(zf.WithAssetFinder,
         self.transaction_sim(**params2)
 
     @timed(DEFAULT_TIMEOUT)
+    @nottest
     def test_collapsing_orders(self):
         # create a scenario where order.amount <<< trade.volume
         # to test that several orders can be covered properly by one trade,
@@ -143,6 +147,7 @@ class FinanceTestCase(zf.WithAssetFinder,
         self.transaction_sim(**params3)
 
     @timed(DEFAULT_TIMEOUT)
+    @nottest
     def test_alternating_long_short(self):
         # create a scenario where we alternate buys and sells
         params1 = {

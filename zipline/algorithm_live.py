@@ -133,9 +133,9 @@ class LiveTradingAlgorithm(TradingAlgorithm):
                                         .tz_convert('UTC'))
 
         return RealtimeClock(
-            self.sim_params.sessions,
-            execution_opens,
-            execution_closes,
+            self.sim_params.sessions.tz_convert(None),
+            execution_opens.tz_convert(None),
+            execution_closes.tz_convert(None),
             before_trading_start_minutes,
             minute_emission=minutely_emission,
             time_skew=self.broker.time_skew,
