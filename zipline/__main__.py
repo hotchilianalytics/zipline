@@ -231,6 +231,13 @@ def ipython_only(option):
     help='Connection to broker',
 )
 @click.option(
+    '--broker-acct',
+    default=None,
+    metavar='BROKER-ACCT',
+    show_default=True,
+    help='Broker sub account to trade in',
+)
+@click.option(
     '--state-file',
     default=None,
     metavar='FILENAME',
@@ -266,6 +273,7 @@ def run(ctx,
         blotter,
         broker,
         broker_uri,
+        broker_acct,
         state_file,
         realtime_bar_target,
         list_brokers):
@@ -295,6 +303,8 @@ def run(ctx,
 
     if broker and broker_uri is None:
         ctx.fail("must specify broker-uri if broker is specified")
+    if broker and broker_acct is None:
+      ctx.warn("not specifying broker-acct defaults to first in the account list")
 
     if broker and state_file is None:
         ctx.fail("must specify state-file with live trading")
@@ -316,7 +326,7 @@ def run(ctx,
         except AttributeError:
             ctx.fail("unsupported broker: can't import class %s from %s" %
                      (cl_name, mod_name))
-        brokerobj = bclass(broker_uri)
+        brokerobj = bclass(broker_uri, broker_acct)
         if end is None:
             end = pd.Timestamp.utcnow() + pd.Timedelta(days=1,seconds=1) # ajjc: Add 1-second to assure that end is > 1day.
 
