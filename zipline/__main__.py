@@ -304,7 +304,7 @@ def run(ctx,
     if broker and broker_uri is None:
         ctx.fail("must specify broker-uri if broker is specified")
     if broker and broker_acct is None:
-      ctx.warn("not specifying broker-acct defaults to first in the account list")
+        click.echo("not specifying broker-acct defaults to first in the account list")
 
     if broker and state_file is None:
         ctx.fail("must specify state-file with live trading")
