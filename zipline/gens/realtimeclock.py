@@ -68,6 +68,8 @@ class RealtimeClock(object):
         self._stop_execution_callback = stop_execution_callback
 
     def __iter__(self):
+        ### ajjc Allows continuing development after trading hours.
+        ###       Doesn't seem to work on Weekends.
         # yield from self.work_when_out_of_trading_hours()
         # return
 

@@ -1171,7 +1171,8 @@ class TradingAlgorithm(object):
                 msg="Cannot order {0}, as it started trading on"
                     " {1}.".format(asset.symbol, asset.start_date)
             )
-        elif normalized_date > asset.end_date:
+        # ajjc:2020-04-08: shift valid date by one, otherwise asset is marked as can n daily trade.
+        elif normalized_date > (asset.end_date): ###  + pd.DateOffset(1)): No valid current price
             raise CannotOrderDelistedAsset(
                 msg="Cannot order {0}, as it stopped trading on"
                     " {1}.".format(asset.symbol, asset.end_date)
@@ -1209,12 +1210,13 @@ class TradingAlgorithm(object):
 
         if asset.auto_close_date:
             day = normalize_date(self.get_datetime())
-            ###ajjc end_date = min(asset.end_date, asset.auto_close_date)
+            ###ajjc            end_date = min(asset.end_date, asset.auto_close_date)
             end_date = asset.auto_close_date
 
             if isinstance(end_date, str):
                 from dateutil import parser
                 end_date = parser.parse(end_date).replace(tzinfo=pytz.UTC)
+            ###ajjc: 2020-04-08
             #if day > end_date:
                 ## If we are after the asset's end date or auto close date, warn
                 ## the user that they can't place an order for this asset, and
@@ -1224,7 +1226,7 @@ class TradingAlgorithm(object):
                          #"liquidated on "
                          #"{1}. Today is {2}.".format(asset.symbol, asset.auto_close_date, day))
 
-                #return False
+                #return None
 
         return True
 

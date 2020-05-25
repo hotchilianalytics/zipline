@@ -17,6 +17,7 @@ import pandas as pd
 import pytz
 from IPython import embed
 from dateutil.relativedelta import relativedelta
+import pathlib as pl
 
 from zipline.finance.blotter.blotter_live import BlotterLive
 from zipline.algorithm import TradingAlgorithm
@@ -252,7 +253,7 @@ class LiveTradingAlgorithm(TradingAlgorithm):
         end_date = pd.Timestamp((datetime.utcnow() + relativedelta(years=10)).date()).replace(tzinfo=pytz.UTC)
         tradeable_asset['end_date'] = end_date
         tradeable_asset['auto_close_date'] = end_date
-        log.info('Extended lifetime of asset {} to {}'.format(symbol_str,
+        log.info('Live:symbol:Extended lifetime of asset {} to {}'.format(symbol_str,
                                                               tradeable_asset['end_date']))
         return asset.from_dict(tradeable_asset)
 
@@ -265,16 +266,18 @@ class LiveTradingAlgorithm(TradingAlgorithm):
         if not self.realtime_bar_target:
             return
 
-        log.info("Storing realtime bars to: {}".format(
+        log.info("Live: Storing realtime bars to: {}".format(
             self.realtime_bar_target))
 
         today = str(pd.to_datetime('today').date())
         subscribed_assets = self.broker.subscribed_assets
         realtime_history = self.broker.get_realtime_bars(subscribed_assets,
                                                          '1m')
+        p  = pl.Path(self.realtime_bar_target)
+        p.mkdir(exist_ok=True, parents=True)
 
-        if not os.path.exists(self.realtime_bar_target):
-            os.mkdir(self.realtime_bar_target)
+        #if not os.path.exists(self.realtime_bar_target):
+        #    os.mkdirs(self.realtime_bar_target, exist_ok=True) #for py3.8
 
         for asset in subscribed_assets:
             filename = "ZL-%s-%s.csv" % (asset.symbol, today)
@@ -296,7 +299,7 @@ class LiveTradingAlgorithm(TradingAlgorithm):
         today = normalize_date(self.get_datetime())
         prev_session = normalize_date(self.trading_calendar.previous_open(today))
 
-        log.info('today in _pipeline_output : {}'.format(prev_session))
+        log.info('Live: today:{} in _pipeline_output : prev_session: {}'.format(today, prev_session))
 
         try:
             data = self._pipeline_cache.get(name, prev_session)

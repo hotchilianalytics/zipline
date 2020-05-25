@@ -6,6 +6,8 @@ from functools import partial
 from numpy import (
     ix_,
     zeros,
+    isnan,
+    count_nonzero,
 )
 from pandas import (
     DataFrame,
@@ -169,6 +171,7 @@ class DataFrameLoader(PipelineLoader):
 
         # Mask out requested columns/rows that didn't match.
         data[~mask] = column.missing_value
+        print("FrameLoad: Dates:{} --> {} columns:{} CountNonNan:{}".format(dates.min().strftime('%m-%d-%Y'), dates.max().strftime('%m-%d-%Y'), columns, count_nonzero(~isnan(data))))
 
         return {
             column: AdjustedArray(

@@ -2,6 +2,8 @@
 from . import quandl  # noqa
 from . import csvdir  # noqa
 from . import sharadar_sep  # noqa
+from . import sharadar_sfp  # noqa
+from . import sharadar_sefp  # noqa
 
 from .core import (
     UnknownBundle,

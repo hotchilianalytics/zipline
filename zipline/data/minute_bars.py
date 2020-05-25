@@ -1077,8 +1077,16 @@ class BcolzMinuteBarReader(MinuteBarReader):
                     rootdir=self._get_carray_path(sid, field),
                     mode='r',
                 )
-            except IOError:
+            except IOError as error:
                 raise NoDataForSid('No minute data for sid {}.'.format(sid))
+
+                # ajjc
+                #print('No minute data for sid {} error {}.'.format(sid, error))
+                #carray = np.array(np.nan)
+                ##raise NoDataForSid('No minute data for sid {} error {}.'.format(sid, error))
+            #except AssertionError as error:
+                #print('No minute data for sid {} error {}.'.format(sid, error))
+                #carray = np.array(np.nan)
 
         return carray
 

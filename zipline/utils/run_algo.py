@@ -4,7 +4,7 @@ import sys
 import warnings
 
 from functools import partial
-
+from imp import reload
 import pandas as pd
 
 try:
@@ -33,6 +33,12 @@ from zipline.algorithm import TradingAlgorithm
 from zipline.algorithm_live import LiveTradingAlgorithm
 from zipline.finance.blotter import Blotter
 
+from zipline.finance.blotter import Blotter
+
+from zipline.pipeline.loaders.blaze import BlazeLoader, from_blaze
+#from alphatools.research import loaders
+
+loaders={}
 
 class _RunAlgoError(click.ClickException, ValueError):
     """Signal an error that should have a different message if invoked from
@@ -78,6 +84,7 @@ def _run(handle_data,
          metrics_set,
          local_namespace,
          environ,
+         data_frame_loaders,
          blotter,
          benchmark_returns,
          broker,
@@ -188,6 +195,15 @@ def _run(handle_data,
         equity_daily_reader=bundle_data.equity_daily_bar_reader,
         adjustment_reader=bundle_data.adjustment_reader,
     )
+    # create and empty BlazeLoader
+    blaze_loader = BlazeLoader()
+
+    #from alphatools.research import loaders
+    #loaders= {}
+
+    def my_dispatcher(column):
+        #reload(alphatools.research.loaders)
+        return loaders[column]
 
     pipeline_loader = USEquityPricingLoader(
         bundle_data.equity_daily_bar_reader,
@@ -197,9 +213,20 @@ def _run(handle_data,
     def choose_loader(column):
         if column in USEquityPricing.columns:
             return pipeline_loader
-        raise ValueError(
-            "No PipelineLoader registered for column %s." % column
-        )
+        try:
+            return my_dispatcher(column)
+        except:
+            pass
+        return blaze_loader    #else:
+    #    env = TradingEnvironment(environ=environ)
+    #    choose_loader = None
+
+    #def choose_loader(column):
+        #if column in USEquityPricing.columns:
+            #return pipeline_loader
+        #raise ValueError(
+            #"No PipelineLoader registered for column %s." % column
+        #)
 
     if isinstance(metrics_set, six.string_types):
         try:
@@ -328,6 +355,7 @@ def run_algorithm(start,
                   extensions=(),
                   strict_extensions=True,
                   environ=os.environ,
+                  data_frame_loaders=None,
                   blotter='default',
                   live_trading=False,
                   tws_uri=None,
@@ -436,6 +464,7 @@ def run_algorithm(start,
         metrics_set=metrics_set,
         local_namespace=False,
         environ=environ,
+        data_frame_loaders=data_frame_loaders,
         blotter=blotter,
         benchmark_returns=benchmark_returns,
         broker=broker,

@@ -1,5 +1,5 @@
 """
-Module for building a complete daily dataset from Quandl's WIKI dataset.
+Module for building a complete daily dataset from Quandl's Sharadar dataset.
 """
 from io import BytesIO
 import tarfile
@@ -178,12 +178,15 @@ def fetch_data_table(api_key,
         try:
             if show_progress:
                 log.info('Downloading Sharadar Price metadata.')
+            url_full_tbl = format_metadata_url(api_key)
+            #ajjc: Debug only: log.info('url_full_tbl={}'.format(url_full_tbl)) # ajjc:Note: Need QUANDL_API_KEY to not have quotes around it in environment.
+            metadata = pd.read_csv(url_full_tbl
 
-            metadata = pd.read_csv(
-                format_metadata_url(api_key)
             )
             # Extract link from metadata and download zip file.
             table_url = metadata.loc[0, 'file.link']
+            #ajjc: Debug only: log.info('url_meta={}'.format(table_url)) # ajjc: Note: Security protocol says not to print API key/access.
+
             if show_progress:
                 raw_file = download_with_progress(
                     table_url,
@@ -264,6 +267,7 @@ def download_with_progress(url, chunk_size, **progress_kwargs):
     resp.raise_for_status()
 
     total_size = int(resp.headers['content-length'])
+    log.info('tbl:total_size={}'.format(total_size))
     data = BytesIO()
     with progressbar(length=total_size, **progress_kwargs) as pbar:
         for chunk in resp.iter_content(chunk_size=chunk_size):
