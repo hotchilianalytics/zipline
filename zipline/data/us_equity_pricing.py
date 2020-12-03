@@ -11,6 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+# ajjc from issue https://github.com/quantopian/zipline/issues/1572
+#  Changed all uint32 to uint64
+
 from errno import ENOENT
 from functools import partial
 from os import remove
@@ -33,7 +38,7 @@ from numpy import (
     integer,
     issubdtype,
     nan,
-    uint32,
+    uint64,
 )
 from pandas import (
     DataFrame,
@@ -103,36 +108,36 @@ SQLITE_STOCK_DIVIDEND_PAYOUT_COLUMN_DTYPES = {
     'payment_sid': integer,
     'ratio': float,
 }
-UINT32_MAX = iinfo(uint32).max
+uint64_MAX = iinfo(uint64).max
 
 
-def check_uint32_safe(value, colname):
-    if value >= UINT32_MAX:
+def check_uint64_safe(value, colname):
+    if value >= uint64_MAX:
         raise ValueError(
             "Value %s from column '%s' is too large" % (value, colname)
         )
 
 
 @expect_element(invalid_data_behavior={'warn', 'raise', 'ignore'})
-def winsorise_uint32(df, invalid_data_behavior, column, *columns):
-    """Drops any record where a value would not fit into a uint32.
+def winsorise_uint64(df, invalid_data_behavior, column, *columns):
+    """Drops any record where a value would not fit into a uint64.
 
     Parameters
     ----------
     df : pd.DataFrame
         The dataframe to winsorise.
     invalid_data_behavior : {'warn', 'raise', 'ignore'}
-        What to do when data is outside the bounds of a uint32.
+        What to do when data is outside the bounds of a uint64.
     *columns : iterable[str]
         The names of the columns to check.
 
     Returns
     -------
     truncated : pd.DataFrame
-        ``df`` with values that do not fit into a uint32 zeroed out.
+        ``df`` with values that do not fit into a uint64 zeroed out.
     """
     columns = list((column,) + columns)
-    mask = df[columns] > UINT32_MAX
+    mask = df[columns] > uint64_MAX
 
     if invalid_data_behavior != 'ignore':
         mask |= df[columns].isnull()
@@ -145,14 +150,14 @@ def winsorise_uint32(df, invalid_data_behavior, column, *columns):
     if mv.any():
         if invalid_data_behavior == 'raise':
             raise ValueError(
-                '%d values out of bounds for uint32: %r' % (
+                '%d values out of bounds for uint64: %r' % (
                     mv.sum(), df[mask.any(axis=1)],
                 ),
             )
         if invalid_data_behavior == 'warn':
             warnings.warn(
                 'Ignoring %d values because they are out of bounds for'
-                ' uint32: %r' % (
+                ' uint64: %r' % (
                     mv.sum(), df[mask.any(axis=1)],
                 ),
                 stacklevel=3,  # one extra frame for `expect_element`
@@ -234,7 +239,7 @@ class BcolzDailyBarWriter(object):
             Whether or not to show a progress bar while writing.
         invalid_data_behavior : {'warn', 'raise', 'ignore'}, optional
             What to do when data is encountered that is outside the range of
-            a uint32.
+            a uint64.
 
         Returns
         -------
@@ -269,7 +274,7 @@ class BcolzDailyBarWriter(object):
             Whether or not to show a progress bar while writing.
         invalid_data_behavior : {'warn', 'raise', 'ignore'}
             What to do when data is encountered that is outside the range of
-            a uint32.
+            a uint64.
         """
         read = partial(
             read_csv,
@@ -297,7 +302,7 @@ class BcolzDailyBarWriter(object):
 
         # Maps column name -> output carray.
         columns = {
-            k: carray(array([], dtype=uint32))
+            k: carray(array([], dtype=uint64))
             for k in US_EQUITY_PRICING_BCOLZ_COLUMNS
         }
 
@@ -321,7 +326,7 @@ class BcolzDailyBarWriter(object):
                     # We know what the content of this column is, so don't
                     # bother reading it.
                     columns['id'].append(
-                        full((nrows,), asset_id, dtype='uint32'),
+                        full((nrows,), asset_id, dtype='uint64'),
                     )
                     continue
 
@@ -412,12 +417,12 @@ class BcolzDailyBarWriter(object):
             # we already have a ctable so do nothing
             return raw_data
 
-        winsorise_uint32(raw_data, invalid_data_behavior, 'volume', *OHLC)
-        processed = (raw_data[list(OHLC)] * 1000).astype('uint32')
+        winsorise_uint64(raw_data, invalid_data_behavior, 'volume', *OHLC)
+        processed = (raw_data[list(OHLC)] * 1000).astype('uint64')
         dates = raw_data.index.values.astype('datetime64[s]')
-        check_uint32_safe(dates.max().view(np.int64), 'day')
-        processed['day'] = dates.astype('uint32')
-        processed['volume'] = raw_data.volume.astype('uint32')
+        check_uint64_safe(dates.max().view(np.int64), 'day')
+        processed['day'] = dates.astype('uint64')
+        processed['volume'] = raw_data.volume.astype('uint64')
         return ctable.fromdataframe(processed)
 
 
@@ -649,7 +654,7 @@ class BcolzDailyBarReader(SessionBarReader):
 
         Returns
         -------
-        array (uint32)
+        array (uint64)
             Full read array of the carray in the daily_bar_table with the
             given colname.
         """
@@ -880,8 +885,8 @@ class SQLiteAdjustmentWriter(object):
             return DataFrame(np.array(
                 [],
                 dtype=[
-                    ('sid', uint32),
-                    ('effective_date', uint32),
+                    ('sid', uint64),
+                    ('effective_date', uint64),
                     ('ratio', float64),
                 ],
             ))
@@ -936,7 +941,7 @@ class SQLiteAdjustmentWriter(object):
         effective_mask = effective_dates != -1
         effective_dates = effective_dates[effective_mask]
         effective_dates = effective_dates.astype('datetime64[ns]').\
-            astype('datetime64[s]').astype(uint32)
+            astype('datetime64[s]').astype(uint64)
         sids = sids[effective_mask]
         ratios = ratios[effective_mask]
 

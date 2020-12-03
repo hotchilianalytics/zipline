@@ -51,14 +51,13 @@ def store_context(state_file_path, context, checksum, exclude_list):
 
     state[CHECKSUM_KEY] = checksum
     import os
-    ###ajjc
-    print("Enhance: AlgoState not stored.")
-    #if not os.path.exists(state_file_path):
-        #os.makedirs(state_file_path)
-    #strat_path = os.path.join(state_file_path, "strategy.state")
+    ###ajjc print("Enhance: AlgoState not stored.")
+    if not os.path.exists(state_file_path):
+        os.makedirs(state_file_path)
+    strat_path = os.path.join(state_file_path, "strategy.state")
 
-    #with open(strat_path, 'wb') as f:
-        ## Forcing v2 protocol for compatibility between py2 and py3
-        #pickle.dump(state, f, protocol=1)
-        #### ajjc orig pickle.dump(state, f, protocol=2)
-    #print("AlgoState={}".format(state))
+    with open(strat_path, 'wb') as f:
+        # Forcing v2 protocol for compatibility between py2 and py3
+        pickle.dump(state, f, protocol=1)
+        ### ajjc orig pickle.dump(state, f, protocol=2)
+    print("AlgoState={}".format(state))

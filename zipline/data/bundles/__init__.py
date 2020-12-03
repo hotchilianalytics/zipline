@@ -4,6 +4,7 @@ from . import csvdir  # noqa
 from . import sharadar_sep  # noqa
 from . import sharadar_sfp  # noqa
 from . import sharadar_sefp  # noqa
+from . import hca_symbol  # noqa
 
 from .core import (
     UnknownBundle,

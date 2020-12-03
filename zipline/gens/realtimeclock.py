@@ -70,8 +70,8 @@ class RealtimeClock(object):
     def __iter__(self):
         ### ajjc Allows continuing development after trading hours.
         ###       Doesn't seem to work on Weekends.
-        # yield from self.work_when_out_of_trading_hours()
-        # return
+        ###yield from self.work_when_out_of_trading_hours()
+        ###return
 
         if not len(self.sessions):
             return

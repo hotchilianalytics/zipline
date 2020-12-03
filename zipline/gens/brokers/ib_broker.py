@@ -549,8 +549,7 @@ class IBBroker(Broker):
                 asset))
 
             # remove str() cast to have a fun debugging journey
-            #ajjc
-            #self._tws.reqMarketDataType(marketDataType=3) #3=Delayed
+            #ajjc  self._tws.reqMarketDataType(marketDataType=3) #3=Delayed
 
             try:
                 self._tws.subscribe_to_market_data(str(asset.symbol))
