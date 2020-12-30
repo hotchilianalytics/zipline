@@ -1,3 +1,9 @@
+# Slightly modified from:
+# Support for zipline yahoo and iex bundles.
+#  https://github.com/hhatefi/zipline_bundles
+# Documentation article for generic ingester support for zipline bundles.
+#  https://hhatefi.github.io/posts/zipline_bundles/
+
 from yahoofinancials import YahooFinancials
 import pandas as pd
 import datetime as dt
